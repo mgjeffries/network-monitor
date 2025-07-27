@@ -12,7 +12,7 @@ void setup() {
 
   // Create WiFiManager instance
   WiFiManager wm;
-  wifiManager.setConfigPortalTimeout(180);
+  wm.setConfigPortalTimeout(180);
   
   // Automatically connect using saved credentials,
   // or start access point if none found
