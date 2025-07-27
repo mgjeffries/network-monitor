@@ -1,58 +1,31 @@
 #include <WiFi.h>
+#include <WiFiManager.h>
 #include <HTTPClient.h>
-#include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
 
-// Heartbeat settings
 const char* heartbeatURL = "https://uptime.betterstack.com/api/v1/heartbeat/Byrp35GjYTtiTSb55ZFeQLJq";
-const unsigned long interval = 5 * 60 * 1000;  // 5 minutes in ms
+const unsigned long interval = 5 * 60 * 1000;
 unsigned long previousMillis = 0;
 
-// Config mode button
-#define CONFIG_BUTTON_PIN 35
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
 
-
-void configModeCallback (WiFiManager *myWiFiManager) {
-    Serial.println("Entered config mode");
-    Serial.println(WiFi.softAPIP());
+  // Create WiFiManager instance
+  WiFiManager wm;
+  wifiManager.setConfigPortalTimeout(180);
   
-    Serial.println(myWiFiManager->getConfigPortalSSID());
+  // Automatically connect using saved credentials,
+  // or start access point if none found
+  if (!wm.autoConnect("ESP32_Setup")) {
+    Serial.println("Failed to connect and hit timeout");
+    ESP.restart();
   }
 
-void setup() {
-  pinMode(CONFIG_BUTTON_PIN, INPUT);  // GPIO35 is input only (no pullup)
-  delay(100);  // Let things stabilize
-  Serial.begin(115200);
-
-  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP  
+  Serial.println("Connected to WiFi!");
 }
 
 void loop() {
   unsigned long currentMillis = millis();
-
-  if ( digitalRead(CONFIG_BUTTON_PIN) == 1) {
-    Serial.println("Config mode triggered by pin");
-
-    WiFiManager wm;    
-
-    //reset settings - for testing
-    //wm.resetSettings();
-  
-    // set configportal timeout
-    wm.setConfigPortalTimeout(180);
-    wm.setAPCallback(configModeCallback);
-
-    if (!wm.startConfigPortal("OnDemandAP")) {
-      Serial.println("failed to connect and hit timeout");
-      delay(3000);
-      //reset and try again, or maybe put it to deep sleep
-      ESP.restart();
-      delay(5000);
-    }
-
-    //if you get here you have connected to the WiFi
-    Serial.println("connected...yeey :)");
-
-  }
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
@@ -61,19 +34,16 @@ void loop() {
       HTTPClient http;
       http.begin(heartbeatURL);
       int httpCode = http.GET();
-
+      
       if (httpCode > 0) {
-        Serial.printf("Heartbeat sent, response code: %d\n", httpCode);
+        Serial.printf("Ping sent, HTTP response code: %d\n", httpCode);
       } else {
-        Serial.printf("Heartbeat failed: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("Ping failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
 
       http.end();
     } else {
-      Serial.println("WiFi disconnected, skipping heartbeat");
+      Serial.println("WiFi not connected");
     }
   }
-
-  delay(100);  // Let things stabilize
-
 }
