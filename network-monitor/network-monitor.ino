@@ -10,6 +10,14 @@ unsigned long previousMillis = 0;
 // Config mode button
 #define CONFIG_BUTTON_PIN 35
 
+
+void configModeCallback (WiFiManager *myWiFiManager) {
+    Serial.println("Entered config mode");
+    Serial.println(WiFi.softAPIP());
+  
+    Serial.println(myWiFiManager->getConfigPortalSSID());
+  }
+
 void setup() {
   pinMode(CONFIG_BUTTON_PIN, INPUT);  // GPIO35 is input only (no pullup)
   delay(100);  // Let things stabilize
@@ -19,6 +27,7 @@ void setup() {
 
   WiFiManager wm;
   // wm.setConfigPortalTimeout(180);  // Optional: exit config mode after 3 minutes
+  wifiManager.setAPCallback(configModeCallback);
 
   if (configMode) {
     Serial.println("Entering WiFi config mode...");
