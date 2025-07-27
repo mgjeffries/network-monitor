@@ -35,7 +35,7 @@ void loop() {
     WiFiManager wm;    
 
     //reset settings - for testing
-    //wm.resetSettings();
+    wm.resetSettings();
   
     // set configportal timeout
     wm.setConfigPortalTimeout(180);
