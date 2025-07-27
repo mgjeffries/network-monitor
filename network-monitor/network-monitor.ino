@@ -23,30 +23,36 @@ void setup() {
   delay(100);  // Let things stabilize
   Serial.begin(115200);
 
-  bool configMode = digitalRead(CONFIG_BUTTON_PIN) == LOW;
-
-  WiFiManager wm;
-  // wm.setConfigPortalTimeout(180);  // Optional: exit config mode after 3 minutes
-  wifiManager.setAPCallback(configModeCallback);
-
-  if (configMode) {
-    Serial.println("Entering WiFi config mode...");
-    if (!wm.startConfigPortal("ESP32_Setup")) {
-      Serial.println("Config portal failed or timed out. Restarting...");
-      ESP.restart();
-    }
-  } else {
-    if (!wm.autoConnect("ESP32_Setup")) {
-      Serial.println("AutoConnect failed. Restarting...");
-      ESP.restart();
-    }
-  }
-
-  Serial.println("Connected to WiFi!");
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP  
 }
 
 void loop() {
   unsigned long currentMillis = millis();
+
+  if ( digitalRead(CONFIG_BUTTON_PIN) == 1) {
+    Serial.println("Config mode triggered by pin");
+
+    WiFiManager wm;    
+
+    //reset settings - for testing
+    //wm.resetSettings();
+  
+    // set configportal timeout
+    wm.setConfigPortalTimeout(180);
+    wm.setAPCallback(configModeCallback);
+
+    if (!wm.startConfigPortal("OnDemandAP")) {
+      Serial.println("failed to connect and hit timeout");
+      delay(3000);
+      //reset and try again, or maybe put it to deep sleep
+      ESP.restart();
+      delay(5000);
+    }
+
+    //if you get here you have connected to the WiFi
+    Serial.println("connected...yeey :)");
+
+  }
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
@@ -67,4 +73,7 @@ void loop() {
       Serial.println("WiFi disconnected, skipping heartbeat");
     }
   }
+
+  delay(100);  // Let things stabilize
+
 }
