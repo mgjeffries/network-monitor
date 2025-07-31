@@ -23,10 +23,15 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 void setup() {
   delay(100);  // Let things stabilize
   Serial.begin(115200);
+  delay(100);  // Let things stabilize
+
 
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP  
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Connected at setup!");
+  }
+  else{
+    Serial.println("NOT Connected at setup!");
   }
 }
 
