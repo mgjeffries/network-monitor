@@ -4,13 +4,12 @@
 #include <Pushbutton.h>
 
 
-// Heartbeat settings
 const char* heartbeatURL = "https://uptime.betterstack.com/api/v1/heartbeat/Byrp35GjYTtiTSb55ZFeQLJq";
 const unsigned long interval = 5 * 60 * 1000;  // 5 minutes in ms
 unsigned long previousMillis = 0;
 
-// Config mode button
 Pushbutton button(D9);
+WiFiManager wm;
 
 
 void configModeCallback (WiFiManager *myWiFiManager) {
@@ -21,18 +20,20 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   }
 
 void setup() {
-  delay(100);  // Let things stabilize
   Serial.begin(115200);
-  delay(100);  // Let things stabilize
+  delay(1000);
 
+  wm.setAPCallback(configModeCallback);
+  wm.setConfigPortalTimeout(180);
 
-  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP  
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("Connected at setup!");
-  }
-  else{
-    Serial.println("NOT Connected at setup!");
-  }
+  // Automatically connect using saved credentials,
+  // or start access point if none found
+  if (!wm.autoConnect("Internet_Monitor_Setup")) {
+      Serial.println("Failed to connect and hit timeout");
+      ESP.restart();
+}
+
+Serial.println("Connected to WiFi!");
 }
 
 void loop() {
@@ -40,26 +41,11 @@ void loop() {
 
   if (button.getSingleDebouncedRelease())
   {
-    Serial.println("Config mode triggered by pin");
-
-    WiFiManager wm;    
+    Serial.println("Reset initiated");
 
     //reset settings - for testing
     wm.resetSettings();
-  
-    // set configportal timeout
-    wm.setConfigPortalTimeout(180);
-    wm.setAPCallback(configModeCallback);
-
-    if (!wm.startConfigPortal("floatyInternetMonitor")) {
-      Serial.println("failed to connect and hit timeout");
-      delay(3000);
-      //reset and try again, or maybe put it to deep sleep
-      ESP.restart();
-      delay(5000);
-    }
-    Serial.println("connected...yay! :)");
-
+    ESP.restart();
   }
 
   if (currentMillis - previousMillis >= interval) {
