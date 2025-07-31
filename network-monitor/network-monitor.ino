@@ -9,12 +9,18 @@ unsigned long previousMillis = 0;
 Pushbutton button(D9);
 WiFiManager wm;
 
+void configModeCallback (WiFiManager *myWiFiManager) {
+    Serial.println("Entered config mode");
+    Serial.println(WiFi.softAPIP());
+  
+    Serial.println(myWiFiManager->getConfigPortalSSID());
+  }
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-//   wm.setAPCallback(configModeCallback);
+  wm.setAPCallback(configModeCallback);
   wm.setConfigPortalTimeout(180);
 
   // Automatically connect using saved credentials,
