@@ -6,26 +6,38 @@ const char* heartbeatURL = "https://uptime.betterstack.com/api/v1/heartbeat/Byrp
 const unsigned long interval = 5 * 60 * 1000;
 unsigned long previousMillis = 0;
 
+Pushbutton button(D9);
+WiFiManager wm;
+
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  // Create WiFiManager instance
-  WiFiManager wm;
+//   wm.setAPCallback(configModeCallback);
   wm.setConfigPortalTimeout(180);
-  
+
   // Automatically connect using saved credentials,
   // or start access point if none found
-  if (!wm.autoConnect("ESP32_Setup")) {
-    Serial.println("Failed to connect and hit timeout");
-    ESP.restart();
-  }
+  if (!wm.autoConnect("Internet_Monitor_Setup")) {
+      Serial.println("Failed to connect and hit timeout");
+      ESP.restart();
+}
 
-  Serial.println("Connected to WiFi!");
+Serial.println("Connected to WiFi!");
 }
 
 void loop() {
   unsigned long currentMillis = millis();
+
+  if (button.getSingleDebouncedRelease())
+  {
+    Serial.println("Reset initiated");
+
+    //reset settings - for testing
+    wm.resetSettings();
+    ESP.restart();
+  }
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
